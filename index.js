@@ -7,6 +7,10 @@ käsiksi, tarvitsemme Expressin tarjoaman json-parserin apua. */
 app.use(express.json())
 app.use(cors())
 
+/* Jotta saamme Expressin näyttämään staattista sisältöä eli sivun index.html
+ ja sen lataaman JavaScriptin ym. tarvitsemme Expressiin sisäänrakennettua middlewarea static. */
+app.use(express.static('dist'))
+
 let notes = [
   {
     id: 1,
@@ -21,6 +25,11 @@ let notes = [
   {
     id: 3,
     content: "GET and POST are the ",
+    important: true
+  },
+  {
+    id: 4,
+    content: "Neljas Nootti ",
     important: true
   }
 ]
