@@ -1,7 +1,13 @@
 
+require('dotenv').config()
 const express = require('express')
 const app = express()
 const cors = require('cors')
+
+// Note-Moduulin käyttöönotto tapahtuu lisäämällä tiedostoon index.js seuraava rivi
+// Näin muuttuja Note saa arvokseen saman olion, jonka moduuli määrittelee.
+const Note = require('./models/note')
+
 /*Jotta pääsisimme POST-pyynnön mukana lähetettyyn dataan helposti 
 käsiksi, tarvitsemme Expressin tarjoaman json-parserin apua. */
 app.use(express.json())
@@ -33,6 +39,26 @@ let notes = [
     important: true
   }
 ]
+
+// Käsittelee sovelluksen juureen tulevia pyyntöjä
+app.get('/', (req, res) => {
+  res.send('<h1>Hello World!</h1>')
+})
+
+app.get('/api/notes', (request, response) => {
+  Note.find({}).then(notes => {
+    response.json(notes)
+  })
+})
+
+// VANHA ILMAN MONGOA
+ /*
+// Käsittelee polkuun /api/notes tulevia pyyntöjä
+app.get('/api/notes', (req, res) => {
+  // huomaa että ei tarvitse stringify-metodia kuten pelkässä Nodessa
+  res.json(notes)
+}) */
+
 
 /*
 Seuraavaksi määritellään sovellukselle kaksi routea.
@@ -115,18 +141,8 @@ app.delete('/api/notes/:id', (request, response) => {
   response.status(204).end()
 })
 
-// Käsittelee sovelluksen juureen tulevia pyyntöjä
-app.get('/', (req, res) => {
-  res.send('<h1>Hello World!</h1>')
-})
 
-// Käsittelee polkuun /api/notes tulevia pyyntöjä
-app.get('/api/notes', (req, res) => {
-  // huomaa että ei tarvitse stringify-metodia kuten pelkässä Nodessa
-  res.json(notes)
-})
-
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
