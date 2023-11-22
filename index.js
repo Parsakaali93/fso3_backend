@@ -17,6 +17,23 @@ app.use(cors())
  ja sen lataaman JavaScriptin ym. tarvitsemme Expressiin sisäänrakennettua middlewarea static. */
 app.use(express.static('dist'))
 
+
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' })
+}
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
+
+  next(error)
+}
+
+
 let notes = [
   {
     id: 1,
@@ -51,6 +68,10 @@ app.get('/api/notes', (request, response) => {
   })
 })
 
+
+
+// tämä tulee kaikkien muiden middlewarejen rekisteröinnin jälkeen!
+
 // VANHA ILMAN MONGOA
  /*
 // Käsittelee polkuun /api/notes tulevia pyyntöjä
@@ -76,8 +97,34 @@ Koodissa pyyntöön vastataan käyttäen response-olion metodia send, jonka kuts
 */
 
 // ROUTE YKSITTÄISEN RESURSSIN KATSOMISTA VARTEN
+
+app.get('/api/notes/:id', (request, response, next) => {
+  Note.findById(request.params.id)
+    .then(note => {
+      if (note) {
+        response.json(note)
+      } 
+      else {
+        response.status(404).end()
+      }
+    })
+
+    .catch(error => {
+      /*
+      console.log(error)
+      response.status(400).send({ error: 'malformatted id' })
+      */
+
+      next(error)
+    })
+})
+
+
+// VANHA 
+/*
 app.get('/api/notes/:id', (request, response) => {
   const id = Number(request.params.id)
+  
   const note = notes.find(note => {
     return note.id === id
   })
@@ -98,6 +145,8 @@ app.get('/api/notes/:id', (request, response) => {
   console.log(note, typeof note)
 
 })
+*/
+
 
 
 const generateId = () => {
@@ -162,4 +211,10 @@ const app = http.createServer((request, response) => {
 const PORT = 3001
 app.listen(PORT)
 console.log(`Server running on port ${PORT}`)
+
+
 */
+
+app.use(unknownEndpoint)
+app.use(errorHandler)
+
