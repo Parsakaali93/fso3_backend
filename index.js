@@ -18,41 +18,25 @@ app.use(cors())
 app.use(express.static('dist'))
 
 
-
-const unknownEndpoint = (request, response) => {
-  response.status(404).send({ error: 'unknown endpoint' })
-}
-
-const errorHandler = (error, request, response, next) => {
-  console.error(error.message)
-
-  if (error.name === 'CastError') {
-    return response.status(400).send({ error: 'malformatted id' })
-  }
-
-  next(error)
-}
-
-
 let notes = [
   {
     id: 1,
-    content: "HTML is easy",
+    content: 'HTML is easy',
     important: true
   },
   {
     id: 2,
-    content: "Browser can execute only JavaScript",
+    content: 'Browser can execute only JavaScript',
     important: false
   },
   {
     id: 3,
-    content: "GET and POST are the ",
+    content: 'GET and POST are the ',
     important: true
   },
   {
     id: 4,
-    content: "Neljas Nootti ",
+    content: 'Neljas Nootti ',
     important: true
   }
 ]
@@ -73,7 +57,7 @@ app.get('/api/notes', (request, response) => {
 // tämä tulee kaikkien muiden middlewarejen rekisteröinnin jälkeen!
 
 // VANHA ILMAN MONGOA
- /*
+/*
 // Käsittelee polkuun /api/notes tulevia pyyntöjä
 app.get('/api/notes', (req, res) => {
   // huomaa että ei tarvitse stringify-metodia kuten pelkässä Nodessa
@@ -157,11 +141,11 @@ const generateId = () => {
 }
 
 // ROUTE RESURSSIN VASTAANOTTOA VARTEN
-app.post('/api/notes', (request, response) => {
+app.post('/api/notes', (request, response, next) => {
   const body = request.body
 
   // We require the content field to not be empty
-  if (!body.content) {
+  if (body.content === undefined) {
     // Return is important, otherwise the function will
     // continue and post the note into the database
     return response.status(400).json({ 
@@ -169,18 +153,47 @@ app.post('/api/notes', (request, response) => {
     })
   }
 
-  const note = {
+  const note = new Note ({
     content: body.content,
     important: body.important || false,
     id: generateId(),
-  }
+  })
 
-  notes = notes.concat(note)
+  note.save().then(result => {
+    console.log('note saved!')
+    response.json(result)
+  })
+    .catch(error => next(error))
 
-  response.json(note)
+})
+
+// ROUTE RESURSSIN PÄIVITTÄMISTÄ VARTEN
+app.put('/api/notes/:id', (request, response, next) => {
+  const { content, important } = request.body
+  /*
+  const note = {
+    content: body.content,
+    important: body.important,
+  }*/
+
+  Note.findByIdAndUpdate(request.params.id, { content, important }, { new: true, runValidators: true, context: 'query' })
+    .then(updatedNote => {
+      response.json(updatedNote)
+    })
+    .catch(error => next(error))
 })
 
 // ROUTE RESURSSIN POISTOA VARTEN
+app.delete('/api/notes/:id', (request, response, next) => {
+  Note.findByIdAndDelete(request.params.id)
+    .then(result => {
+      response.status(204).end()
+    })
+    .catch(error => next(error))
+})
+
+// VANHA 
+/*
 app.delete('/api/notes/:id', (request, response) => {
   const id = Number(request.params.id)
   notes = notes.filter(note => note.id !== id)
@@ -188,7 +201,7 @@ app.delete('/api/notes/:id', (request, response) => {
   // Jos poisto onnistuu eli poistettava muistiinpano on olemassa,
   // vastataan statuskoodilla 204 no content sillä mukaan ei lähetetä mitään dataa.
   response.status(204).end()
-})
+})*/
 
 
 const PORT = process.env.PORT
@@ -215,6 +228,28 @@ console.log(`Server running on port ${PORT}`)
 
 */
 
+// Olemattomien osoitteiden käsittely
+const unknownEndpoint = (request, response) => {
+  console.log('unknownEndpoint')
+  response.status(404).send({ error: 'unknown endpoint' })
+}
+
 app.use(unknownEndpoint)
+
+
+// Virheidenkäsittelijä
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+  console.log('errorHandler')
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
+  else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
+  }
+  next(error)
+}
+
 app.use(errorHandler)
 
