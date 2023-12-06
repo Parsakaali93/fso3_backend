@@ -23,7 +23,8 @@ notesRouter.get('/:id', async (request, response) => {
 // Uuden muistiinpanon lisäys
 notesRouter.post('/', async (request, response) => {
   const body = request.body
-
+  console.log(request.body)
+  console.log(body.content)
   const note = new Note({
     content: body.content,
     important: body.important || false,
