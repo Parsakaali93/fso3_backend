@@ -21,6 +21,11 @@ usersRouter.post('/', async (request, response) => {
 
 usersRouter.get('/', async (request, response) => {
     const users = await User.find({})
+      /*Funktion populate kutsu siis ketjutetaan kyselyä vastaavan metodikutsun
+       (tässä tapauksessa find) perään. Populaten parametri määrittelee, että
+        user-dokumenttien notes-kentässä olevat note-olioihin viittaavat id:t
+         korvataan niitä vastaavilla dokumenteilla.*/
+      .find({}).populate('notes', { content: 1, important: 1 })
     response.json(users)
   })
 
