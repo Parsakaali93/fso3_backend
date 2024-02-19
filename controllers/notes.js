@@ -13,6 +13,11 @@ const getTokenFrom = request => {
 
   return null
 }
+
+/* The router we defined is used if the URL of the request starts with /api/notes.
+ For this reason, the notesRouter object must only define the relative parts of the routes,
+i.e. the empty path / or just the parameter /:id. */
+
 // Kaikkien muistiinpanojen nouto
 notesRouter.get('/', async (request, response) => {
   const notes = await Note.find({})

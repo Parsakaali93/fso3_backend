@@ -30,7 +30,9 @@ loginRouter.post('/', async (request, response) => {
     id: user._id,
   }
 
-  const token = jwt.sign(userForToken, process.env.SECRET)
+  // Once the token expires, the client app needs to get a new token.
+  // Usually, this happens by forcing the user to re-login to the app.
+  const token = jwt.sign(userForToken, process.env.SECRET, {expiresIn: 60*60})
 
   /* Onnistuneeseen pyyntöön vastataan statuskoodilla 200 ok ja generoitu token sekä
    kirjautuneen käyttäjän käyttäjätunnus ja nimi lähetetään vastauksen bodyssä pyynnön tekijälle. */

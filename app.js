@@ -10,9 +10,7 @@ const mongoose = require('mongoose')
 
 require('express-async-errors')
 
-/* The router we defined earlier is used if the URL of the request starts with /api/notes.
- For this reason, the notesRouter object must only define the relative parts of the routes,
-  i.e. the empty path / or just the parameter /:id. */
+
 const notesRouter = require('./controllers/notes')
 const usersRouter = require('./controllers/users')
 const loginRouter = require('./controllers/login')
@@ -69,6 +67,10 @@ app.use(middleware.requestLogger)
 app.use('/api/login', loginRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/notes', notesRouter)
+if (process.env.NODE_ENV === 'test') {
+    const testingRouter = require('./controllers/testing')
+    app.use('/api/testing', testingRouter
+)}
 
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)
